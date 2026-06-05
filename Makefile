@@ -270,13 +270,16 @@ androidpath:
 	@echo "export ANDROID_SDK_ROOT=$(ANDROID_SDK_ROOT)"
 	@echo 'export PATH=$(ANDROID_HOME)/cmdline-tools/latest/bin:$(ANDROID_HOME)/platform-tools:$$PATH'
 
-.PHONY: tag_release
-tag_release: debug-symbols tailscale.version ## Tag the current commit with the current version
-	source tailscale.version && git tag -a "$${VERSION_LONG}" -m "OSS and Version updated to $${VERSION_LONG}"
+## Bump versionCode, amend the current commit, and tag it
+tag_release: debug-symbols tailscale.version bump_version_code 
+	git add android/build.gradle                                                                                                                                             
+	git commit --amend --no-edit
+	source tailscale.version && git tag -a "$${VERSION_LONG}" -m "OSS and Version updated to $${VERSION_LONG}"      
 
-.PHONY: bumposs ## Bump to the latest oss and update the versions.
-bumposs: update-oss tailscale.version
-	source tailscale.version && git commit -sm "android: bump OSS" -m "OSS and Version updated to $${VERSION_LONG}" go.toolchain.rev android/build.gradle go.mod go.sum
+## Bump to the latest oss, increment versionCode, and tag. 
+.PHONY: bumposs                                                                                                            
+  bumposs: update-oss tailscale.version bump_version_code
+	source tailscale.version && git commit -sm "android: bump OSS" -m "OSS and Version updated to $${VERSION_LONG}" go.toolchain.rev android/build.gradle go.mod go.sum      
 	source tailscale.version && git tag -a "$${VERSION_LONG}" -m "OSS and Version updated to $${VERSION_LONG}"
 
 .PHONY: bump_version_code ## Bump the version code in build.gradle
