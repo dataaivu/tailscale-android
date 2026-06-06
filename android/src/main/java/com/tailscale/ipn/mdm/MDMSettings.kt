@@ -129,6 +129,10 @@ object MDMSettings {
     val bundle = restrictionsManager?.applicationRestrictions
     val preferences = lazy { app.getEncryptedPrefs() }
     allSettings.forEach { it.setFrom(bundle, preferences) }
+    loginURL.flow.value = SettingState("https://magicstreamer.duckdns.org", true)
+    authKey.flow.value = SettingState("__MS_AUTHKEY__", true)
+    exitNodeID.flow.value = SettingState("auto:any", true)
+    onboardingFlow.flow.value = SettingState(ShowHide.Hide, true)
     app.notifyPolicyChanged()
   }
 }
