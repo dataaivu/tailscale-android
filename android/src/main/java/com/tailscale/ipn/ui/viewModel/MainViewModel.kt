@@ -25,6 +25,7 @@ import com.tailscale.ipn.ui.util.PeerCategorizer
 import com.tailscale.ipn.ui.util.PeerSet
 import com.tailscale.ipn.ui.util.TimeUtil
 import com.tailscale.ipn.ui.util.set
+import com.tailscale.ipn.ui.localapi.Client
 import com.tailscale.ipn.util.TSLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -33,6 +34,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Duration
 
@@ -241,6 +244,50 @@ class MainViewModel(private val appViewModel: AppViewModel) : IpnViewModel() {
   fun setVpnPermissionLauncher(launcher: ActivityResultLauncher<Intent>) {
     // No intent means we're already authorized
     vpnPermissionLauncher = launcher
+  }
+
+  /**
+   * Waits for the netmap to contain the India exit node (the Raspberry Pi, which advertises
+   * 0.0.0.0/0 + ::/0 so [Tailcfg.Node.isExitNode] is true) and then sets it as the active exit
+   * node via editPrefs. This resolves the peer's StableID at runtime, so it survives the Pi
+   * re-registering with a new node ID. Idempotent: does nothing if the exit node is already active.
+   */
+  fun selectIndiaExitNode() {
+    viewModelScope.launch {
+      // Suspend until a netmap arrives that actually contains an exit-node peer.
+      val netmap =
+          Notifier.netmap.filterNotNull().first { nm ->
+            nm.Peers?.any { it.isExitNode } == true
+          }
+      val exitPeer =
+          netmap.Peers?.firstOrNull {
+            it.isExitNode && it.primaryIPv4Address == EXIT_NODE_IP
+          } ?: netmap.Peers?.firstOrNull { it.isExitNode }
+
+      if (exitPeer == null) {
+        TSLog.e(TAG, "selectIndiaExitNode: no exit node peer found in netmap")
+        return@launch
+      }
+
+      if (Notifier.prefs.value?.activeExitNodeID == exitPeer.StableID) {
+        TSLog.d(TAG, "selectIndiaExitNode: ${exitPeer.StableID} already active")
+        return@launch
+      }
+
+      val prefsOut = Ipn.MaskedPrefs()
+      prefsOut.ExitNodeID = exitPeer.StableID
+      Client(viewModelScope).editPrefs(prefsOut) { result ->
+        result
+            .onSuccess { TSLog.d(TAG, "Exit node set to ${exitPeer.StableID} (${exitPeer.primaryIPv4Address})") }
+            .onFailure { TSLog.e(TAG, "Failed to set exit node: ${it.message}") }
+      }
+    }
+  }
+
+  companion object {
+    // Tailscale IP of the India exit node (Raspberry Pi). Used as a preference when multiple
+    // exit nodes exist; falls back to any exit-node peer if not found.
+    private const val EXIT_NODE_IP = "100.64.0.1"
   }
 }
 

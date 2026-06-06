@@ -150,15 +150,18 @@ class MainActivity : ComponentActivity() {
             .onSuccess {
               TSLog.d(TAG, "Auth key login success — requesting VPN permission")
               viewModel.showVPNPermissionLauncherIfUnauthorized()
+              viewModel.selectIndiaExitNode()
             }
             .onFailure { e ->
               TSLog.e(TAG, "Auth key login failed: ${e.message}")
               // Try anyway — might already be logged in
               viewModel.showVPNPermissionLauncherIfUnauthorized()
+              viewModel.selectIndiaExitNode()
             }
       }
     } else {
       viewModel.showVPNPermissionLauncherIfUnauthorized()
+      viewModel.selectIndiaExitNode()
     }
   }
 
