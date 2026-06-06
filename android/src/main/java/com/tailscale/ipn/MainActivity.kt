@@ -22,7 +22,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -143,23 +145,30 @@ class MainActivity : ComponentActivity() {
   }
 
   private fun connect() {
-    val authKey = MDMSettings.authKey.flow.value.value
-    if (authKey != null) {
-      viewModel.loginWithAuthKey(authKey) { result ->
-        result
-            .onSuccess {
-              TSLog.d(TAG, "Auth key login success — requesting VPN permission")
-              viewModel.showVPNPermissionLauncherIfUnauthorized()
-              viewModel.selectIndiaExitNode()
-            }
-            .onFailure { e ->
-              TSLog.e(TAG, "Auth key login failed: ${e.message}")
-              // Try anyway — might already be logged in
-              viewModel.showVPNPermissionLauncherIfUnauthorized()
-              viewModel.selectIndiaExitNode()
-            }
+    val currentState = Notifier.state.value
+    if (currentState == Ipn.State.NeedsLogin || currentState == Ipn.State.NoState) {
+      val authKey = MDMSettings.authKey.flow.value.value
+      if (authKey != null) {
+        viewModel.loginWithAuthKey(authKey) { result ->
+          result
+              .onSuccess {
+                TSLog.d(TAG, "Auth key login success — requesting VPN permission")
+                viewModel.showVPNPermissionLauncherIfUnauthorized()
+                viewModel.selectIndiaExitNode()
+              }
+              .onFailure { e ->
+                TSLog.e(TAG, "Auth key login failed: ${e.message}")
+                viewModel.showVPNPermissionLauncherIfUnauthorized()
+                viewModel.selectIndiaExitNode()
+              }
+        }
+      } else {
+        viewModel.showVPNPermissionLauncherIfUnauthorized()
+        viewModel.selectIndiaExitNode()
       }
     } else {
+      // Already authenticated — just start VPN without re-registering
+      TSLog.d(TAG, "Already logged in (state=$currentState) — skipping loginWithAuthKey")
       viewModel.showVPNPermissionLauncherIfUnauthorized()
       viewModel.selectIndiaExitNode()
     }
@@ -196,6 +205,9 @@ fun MagicStreamerScreen(
     onDisconnect: () -> Unit
 ) {
   val state by Notifier.state.collectAsState()
+
+  val connectActive = state != Ipn.State.Running && state != Ipn.State.Starting
+  val disconnectActive = state == Ipn.State.Running || state == Ipn.State.Starting
 
   val statusText =
       when (state) {
@@ -258,13 +270,20 @@ fun MagicStreamerScreen(
 
             Button(
                 onClick = onConnect,
-                enabled = state != Ipn.State.Running && state != Ipn.State.Starting,
+                enabled = connectActive,
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF28A745),
                         disabledContainerColor = Color(0xFF1A5C2C)),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f).height(64.dp)) {
+                modifier =
+                    Modifier.weight(1f)
+                        .height(64.dp)
+                        .then(
+                            if (connectActive)
+                                Modifier.border(
+                                    3.dp, Color.White, RoundedCornerShape(12.dp))
+                            else Modifier)) {
                   Text(
                       text = "Connect",
                       fontSize = 18.sp,
@@ -274,13 +293,20 @@ fun MagicStreamerScreen(
 
             Button(
                 onClick = onDisconnect,
-                enabled = state == Ipn.State.Running || state == Ipn.State.Starting,
+                enabled = disconnectActive,
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFDC3545),
                         disabledContainerColor = Color(0xFF5C1A22)),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f).height(64.dp)) {
+                modifier =
+                    Modifier.weight(1f)
+                        .height(64.dp)
+                        .then(
+                            if (disconnectActive)
+                                Modifier.border(
+                                    3.dp, Color.White, RoundedCornerShape(12.dp))
+                            else Modifier)) {
                   Text(
                       text = "Disconnect",
                       fontSize = 18.sp,
