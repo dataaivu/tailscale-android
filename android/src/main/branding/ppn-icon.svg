@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0e0e2e"/>
+      <stop offset="100%" style="stop-color:#04040e"/>
+    </linearGradient>
+    <linearGradient id="signalGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0055ff"/>
+      <stop offset="100%" style="stop-color:#00d4ff"/>
+    </linearGradient>
+    <linearGradient id="dotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffcc"/>
+      <stop offset="50%" style="stop-color:#00d4ff"/>
+      <stop offset="100%" style="stop-color:#0088ff"/>
+    </linearGradient>
+    <radialGradient id="glowBg" cx="50%" cy="45%" r="45%">
+      <stop offset="0%" style="stop-color:#0033aa;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="arcglow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="dotglow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="groundglow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="220" fill="url(#bgGrad)"/>
+  <ellipse cx="512" cy="470" rx="300" ry="280" fill="url(#glowBg)"/>
+
+  <!-- Signal Arcs — node centered at (512, 490) -->
+  <path d="M 322 490 A 190 190 0 0 0 702 490"
+        fill="none" stroke="url(#signalGrad)" stroke-width="18"
+        stroke-linecap="round" opacity="0.15" filter="url(#arcglow)"/>
+  <path d="M 362 490 A 150 150 0 0 0 662 490"
+        fill="none" stroke="url(#signalGrad)" stroke-width="20"
+        stroke-linecap="round" opacity="0.35" filter="url(#arcglow)"/>
+  <path d="M 402 490 A 110 110 0 0 0 622 490"
+        fill="none" stroke="url(#signalGrad)" stroke-width="22"
+        stroke-linecap="round" opacity="0.62" filter="url(#arcglow)"/>
+  <path d="M 442 490 A 70 70 0 0 0 582 490"
+        fill="none" stroke="url(#signalGrad)" stroke-width="24"
+        stroke-linecap="round" opacity="0.95" filter="url(#arcglow)"/>
+
+  <!-- Node dot -->
+  <circle cx="512" cy="490" r="52" fill="#00aaff" opacity="0.12" filter="url(#dotglow)"/>
+  <circle cx="512" cy="490" r="38" fill="url(#dotGrad)" opacity="0.3"/>
+  <circle cx="512" cy="490" r="28" fill="url(#dotGrad)" filter="url(#dotglow)"/>
+  <circle cx="512" cy="490" r="14" fill="#ffffff" opacity="0.95"/>
+
+  <!-- Ground symbol -->
+  <line x1="512" y1="518" x2="512" y2="580"
+        stroke="url(#signalGrad)" stroke-width="18"
+        stroke-linecap="round" opacity="0.75" filter="url(#groundglow)"/>
+  <line x1="412" y1="598" x2="612" y2="598"
+        stroke="url(#signalGrad)" stroke-width="18"
+        stroke-linecap="round" opacity="0.75" filter="url(#groundglow)"/>
+  <line x1="445" y1="632" x2="579" y2="632"
+        stroke="url(#signalGrad)" stroke-width="13"
+        stroke-linecap="round" opacity="0.50" filter="url(#groundglow)"/>
+  <line x1="477" y1="662" x2="547" y2="662"
+        stroke="url(#signalGrad)" stroke-width="9"
+        stroke-linecap="round" opacity="0.28"/>
+
+  <!-- Border -->
+  <rect x="3" y="3" width="1018" height="1018" rx="218"
+        fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.10"/>
+</svg>

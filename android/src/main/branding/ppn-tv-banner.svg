@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" width="320" height="180">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d0d2b"/>
+      <stop offset="100%" style="stop-color:#05050f"/>
+    </linearGradient>
+    <linearGradient id="sg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0055ff"/>
+      <stop offset="100%" style="stop-color:#00d4ff"/>
+    </linearGradient>
+    <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#aaddff"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="dg">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="320" height="180" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.8" fill="#00d4ff" opacity="0.12"/>
+    </pattern>
+  </defs>
+  <rect width="320" height="180" fill="url(#grid)"/>
+
+  <!-- Right-side glow -->
+  <radialGradient id="rglow" cx="75%" cy="50%" r="40%">
+    <stop offset="0%" style="stop-color:#0033aa;stop-opacity:0.35"/>
+    <stop offset="100%" style="stop-color:#000000;stop-opacity:0"/>
+  </radialGradient>
+  <rect width="320" height="180" fill="url(#rglow)"/>
+
+  <!-- Icon — node centered at (258, 82) -->
+  <!-- Arcs -->
+  <path d="M 222 82 A 36 36 0 0 0 294 82"
+        fill="none" stroke="url(#sg)" stroke-width="3.5"
+        stroke-linecap="round" opacity="0.22" filter="url(#glow)"/>
+  <path d="M 234 82 A 24 24 0 0 0 282 82"
+        fill="none" stroke="url(#sg)" stroke-width="4"
+        stroke-linecap="round" opacity="0.55" filter="url(#glow)"/>
+  <path d="M 246 82 A 12 12 0 0 0 270 82"
+        fill="none" stroke="url(#sg)" stroke-width="4.5"
+        stroke-linecap="round" opacity="0.95" filter="url(#glow)"/>
+
+  <!-- Node dot -->
+  <circle cx="258" cy="82" r="9" fill="#00aaff" opacity="0.2" filter="url(#dg)"/>
+  <circle cx="258" cy="82" r="6" fill="url(#sg)" filter="url(#dg)"/>
+  <circle cx="258" cy="82" r="3" fill="#ffffff" opacity="0.95"/>
+
+  <!-- Ground -->
+  <line x1="258" y1="88" x2="258" y2="102"
+        stroke="url(#sg)" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+  <line x1="242" y1="107" x2="274" y2="107"
+        stroke="url(#sg)" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+  <line x1="247" y1="114" x2="269" y2="114"
+        stroke="url(#sg)" stroke-width="2.5" stroke-linecap="round" opacity="0.48"/>
+  <line x1="252" y1="120" x2="264" y2="120"
+        stroke="url(#sg)" stroke-width="2" stroke-linecap="round" opacity="0.26"/>
+
+  <!-- Wordmark -->
+  <text x="32" y="102"
+        font-family="'Arial Black', Impact, sans-serif"
+        font-size="64" font-weight="900"
+        letter-spacing="-1"
+        fill="url(#tg)">PPN</text>
+
+  <!-- Tagline -->
+  <text x="34" y="122"
+        font-family="Arial, sans-serif"
+        font-size="10" font-weight="400"
+        letter-spacing="3"
+        fill="#00d4ff" opacity="0.65">PHYSICAL PRIVATE NETWORK</text>
+
+  <!-- Divider -->
+  <line x1="32" y1="130" x2="200" y2="130"
+        stroke="#00d4ff" stroke-width="0.75" opacity="0.20"/>
+</svg>

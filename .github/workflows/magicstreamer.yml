@@ -17,6 +17,40 @@ jobs:
           java-version: "17"
       - name: Inject MagicStreamer auth key
         run: sed -i "s|__MS_AUTHKEY__|${{ secrets.MS_AUTHKEY }}|g" android/src/main/java/com/tailscale/ipn/mdm/MDMSettings.kt
+
+      - name: Install branding tools
+        run: sudo apt-get install -y librsvg2-bin webp
+
+      - name: Generate launcher icons (SVG → webp at all densities)
+        run: |
+          ICON=android/src/main/branding/ppn-icon.svg
+          # mdpi 48x48
+          rsvg-convert -w 48 -h 48 "$ICON" -o /tmp/icon.png
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-mdpi/ic_launcher.webp
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-mdpi/ic_launcher_round.webp
+          # hdpi 72x72
+          rsvg-convert -w 72 -h 72 "$ICON" -o /tmp/icon.png
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-hdpi/ic_launcher.webp
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-hdpi/ic_launcher_round.webp
+          # xhdpi 96x96
+          rsvg-convert -w 96 -h 96 "$ICON" -o /tmp/icon.png
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xhdpi/ic_launcher.webp
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xhdpi/ic_launcher_round.webp
+          # xxhdpi 144x144
+          rsvg-convert -w 144 -h 144 "$ICON" -o /tmp/icon.png
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xxhdpi/ic_launcher.webp
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp
+          # xxxhdpi 192x192
+          rsvg-convert -w 192 -h 192 "$ICON" -o /tmp/icon.png
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xxxhdpi/ic_launcher.webp
+          cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp
+
+      - name: Generate TV banner (320x180 PNG)
+        run: |
+          rsvg-convert -w 320 -h 180 \
+            android/src/main/branding/ppn-tv-banner.svg \
+            -o android/src/main/res/drawable-xhdpi/tv_banner.png
+
       - name: Build universal debug APK
         run: make tailscale-debug.apk
       - name: Rename
@@ -27,6 +61,33 @@ jobs:
           name: Magic-Streamer-APK
           path: Magic-Streamer.apk
           if-no-files-found: error
+      - name: Purge stale Headscale client nodes
+        if: success()
+        env:
+          HS_API_KEY: ${{ secrets.MS_HS_APIKEY }}
+        run: |
+          # Fetch all nodes, delete any that are client devices (not the exit node raspberrypi)
+          # Exit node has approved routes 0.0.0.0/0 — clients have none.
+          NODES=$(curl -sf \
+            -H "Authorization: Bearer $HS_API_KEY" \
+            https://magicstreamer.duckdns.org/api/v1/node)
+          echo "$NODES" | python3 -c "
+          import json, sys, urllib.request, os
+          nodes = json.load(sys.stdin)['nodes']
+          key = os.environ['HS_API_KEY']
+          for n in nodes:
+              # Skip exit node (has approved routes)
+              if n.get('approvedRoutes'):
+                  print(f'Keeping exit node: {n[\"givenName\"]} ({n[\"id\"]})')
+                  continue
+              print(f'Deleting stale node: {n[\"givenName\"]} ({n[\"id\"]})')
+              req = urllib.request.Request(
+                  f'https://magicstreamer.duckdns.org/api/v1/node/{n[\"id\"]}',
+                  method='DELETE',
+                  headers={'Authorization': f'Bearer {key}'}
+              )
+              urllib.request.urlopen(req)
+          "
       - name: Notify build complete
         if: always()
         run: |
