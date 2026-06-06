@@ -45,8 +45,15 @@ jobs:
           cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xxxhdpi/ic_launcher.webp
           cwebp -lossless /tmp/icon.png -o android/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp
 
-      - name: Generate TV banner (320x180 PNG)
+      - name: Generate TV banner (4K — drawable-nodpi)
         run: |
+          mkdir -p android/src/main/res/drawable-nodpi
+          # 3840x2160 — rendered from vector, pixel-perfect on 4K Fire TV.
+          # drawable-nodpi tells Android to use this image as-is, no scaling.
+          rsvg-convert -w 3840 -h 2160 \
+            android/src/main/branding/ppn-tv-banner.svg \
+            -o android/src/main/res/drawable-nodpi/tv_banner.png
+          # Keep the legacy xhdpi fallback (320x180) for older/SD devices
           rsvg-convert -w 320 -h 180 \
             android/src/main/branding/ppn-tv-banner.svg \
             -o android/src/main/res/drawable-xhdpi/tv_banner.png
