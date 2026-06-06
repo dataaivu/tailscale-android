@@ -167,10 +167,16 @@ class MainActivity : ComponentActivity() {
         viewModel.selectIndiaExitNode()
       }
     } else {
-      // Already authenticated — just start VPN without re-registering
-      TSLog.d(TAG, "Already logged in (state=$currentState) — skipping loginWithAuthKey")
-      viewModel.showVPNPermissionLauncherIfUnauthorized()
-      viewModel.selectIndiaExitNode()
+      // Already authenticated — re-run start() to wake the LocalBackend state machine,
+      // then kick the VPN service. Without start(), setWantRunning(true) alone is ignored
+      // after a serviceDisconnect.
+      TSLog.d(TAG, "Reconnecting (state=$currentState) — restarting LocalBackend without re-registering")
+      val reconnectPrefs = Ipn.MaskedPrefs()
+      reconnectPrefs.WantRunning = true
+      viewModel.login(reconnectPrefs) { _ ->
+        viewModel.showVPNPermissionLauncherIfUnauthorized()
+        viewModel.selectIndiaExitNode()
+      }
     }
   }
 
@@ -206,13 +212,14 @@ fun MagicStreamerScreen(
 ) {
   val state by Notifier.state.collectAsState()
 
-  val connectActive = state != Ipn.State.Running && state != Ipn.State.Starting
+  val connectActive = state != Ipn.State.Running && state != Ipn.State.Starting && state != Ipn.State.Stopping
   val disconnectActive = state == Ipn.State.Running || state == Ipn.State.Starting
 
   val statusText =
       when (state) {
         Ipn.State.Running -> "Connected via India"
         Ipn.State.Starting -> "Connecting..."
+        Ipn.State.Stopping -> "Disconnecting..."
         Ipn.State.Stopped -> "Disconnected"
         Ipn.State.NeedsLogin -> "Not logged in"
         Ipn.State.NeedsMachineAuth -> "Awaiting approval"
