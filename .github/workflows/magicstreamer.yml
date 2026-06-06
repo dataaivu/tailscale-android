@@ -1,0 +1,29 @@
+name: Build Magic-Streamer APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Inject MagicStreamer auth key
+        run: sed -i "s|__MS_AUTHKEY__|${{ secrets.MS_AUTHKEY }}|g" android/src/main/java/com/tailscale/ipn/mdm/MDMSettings.kt
+      - name: Build universal debug APK
+        run: make tailscale-debug.apk
+      - name: Rename
+        run: cp tailscale-debug.apk Magic-Streamer.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magic-Streamer-APK
+          path: Magic-Streamer.apk
+          if-no-files-found: error
