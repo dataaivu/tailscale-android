@@ -131,11 +131,11 @@ object MDMSettings {
     allSettings.forEach { it.setFrom(bundle, preferences) }
     loginURL.flow.value = SettingState("https://magicstreamer.duckdns.org", true)
     authKey.flow.value = SettingState("__MS_AUTHKEY__", true)
-    // Do not force an exit node via MDM. "auto:any" only works with Tailscale's cloud
-    // "suggested exit nodes" feature, which Headscale does not provide, and an empty/invalid
-    // value leaves traffic routed locally. The India exit node is resolved and applied at
-    // runtime by MainViewModel.selectIndiaExitNode() using the peer's real StableID.
-    exitNodeID.flow.value = SettingState("", true)
+    // Do NOT manage the exit node via MDM (isSet=false). A managed exit node value is locked by
+    // policy ("exit node cannot be changed: managed by policy"), which blocks the runtime
+    // selection below. The India exit node is resolved and applied at runtime by
+    // MainViewModel.selectIndiaExitNode() using the peer's real StableID.
+    exitNodeID.flow.value = SettingState("", false)
     onboardingFlow.flow.value = SettingState(ShowHide.Hide, true)
     app.notifyPolicyChanged()
   }
