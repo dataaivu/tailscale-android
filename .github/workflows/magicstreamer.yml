@@ -27,3 +27,11 @@ jobs:
           name: Magic-Streamer-APK
           path: Magic-Streamer.apk
           if-no-files-found: error
+      - name: Notify build complete
+        if: always()
+        run: |
+          curl -s \
+            -H "Title: MagicStreamer build ${{ job.status }}" \
+            -H "Tags: ${{ job.status }}" \
+            -d "run=${{ github.run_id }} status=${{ job.status }} url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            https://ntfy.sh/magicstreamer-ci-7h3k9x
