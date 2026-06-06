@@ -148,18 +148,17 @@ class MainActivity : ComponentActivity() {
       viewModel.loginWithAuthKey(authKey) { result ->
         result
             .onSuccess {
-              TSLog.d(TAG, "Auth key login success — starting VPN")
-              viewModel.startVPN()
+              TSLog.d(TAG, "Auth key login success — requesting VPN permission")
+              viewModel.showVPNPermissionLauncherIfUnauthorized()
             }
             .onFailure { e ->
               TSLog.e(TAG, "Auth key login failed: ${e.message}")
-              // Try startVPN anyway — might already be logged in
-              viewModel.startVPN()
+              // Try anyway — might already be logged in
+              viewModel.showVPNPermissionLauncherIfUnauthorized()
             }
       }
     } else {
-      // No auth key — just start VPN (assume already authenticated)
-      viewModel.startVPN()
+      viewModel.showVPNPermissionLauncherIfUnauthorized()
     }
   }
 
