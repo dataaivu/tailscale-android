@@ -70,33 +70,6 @@ jobs:
           name: Magic-Streamer-APK
           path: Magic-Streamer.apk
           if-no-files-found: error
-      - name: Purge stale Headscale client nodes
-        if: success()
-        env:
-          HS_API_KEY: ${{ secrets.MS_HS_APIKEY }}
-        run: |
-          # Fetch all nodes, delete any that are client devices (not the exit node raspberrypi)
-          # Exit node has approved routes 0.0.0.0/0 — clients have none.
-          NODES=$(curl -sf \
-            -H "Authorization: Bearer $HS_API_KEY" \
-            https://magicstreamer.duckdns.org/api/v1/node)
-          echo "$NODES" | python3 -c "
-          import json, sys, urllib.request, os
-          nodes = json.load(sys.stdin)['nodes']
-          key = os.environ['HS_API_KEY']
-          for n in nodes:
-              # Skip exit node (has approved routes)
-              if n.get('approvedRoutes'):
-                  print(f'Keeping exit node: {n[\"givenName\"]} ({n[\"id\"]})')
-                  continue
-              print(f'Deleting stale node: {n[\"givenName\"]} ({n[\"id\"]})')
-              req = urllib.request.Request(
-                  f'https://magicstreamer.duckdns.org/api/v1/node/{n[\"id\"]}',
-                  method='DELETE',
-                  headers={'Authorization': f'Bearer {key}'}
-              )
-              urllib.request.urlopen(req)
-          "
       - name: Notify build complete
         if: always()
         run: |
