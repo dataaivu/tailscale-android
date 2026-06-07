@@ -144,8 +144,34 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  private fun isRegistered(): Boolean =
+      getSharedPreferences("ppn", Context.MODE_PRIVATE).getBoolean("registered", false)
+
+  private fun markRegistered() =
+      getSharedPreferences("ppn", Context.MODE_PRIVATE).edit().putBoolean("registered", true).apply()
+
+  private fun reconnect() {
+    // Re-run start() to wake the LocalBackend state machine after serviceDisconnect.
+    // Without start(), setWantRunning(true) alone is ignored.
+    val reconnectPrefs = Ipn.MaskedPrefs()
+    reconnectPrefs.WantRunning = true
+    viewModel.login(reconnectPrefs) { _ ->
+      viewModel.showVPNPermissionLauncherIfUnauthorized()
+      viewModel.selectIndiaExitNode()
+    }
+  }
+
   private fun connect() {
     val currentState = Notifier.state.value
+
+    // If this device was already registered, always reconnect — never re-register.
+    // stopVPN() causes state to fall back to NeedsLogin, but the node key is still valid.
+    if (isRegistered()) {
+      TSLog.d(TAG, "Reconnecting (state=$currentState) — device already registered, skipping loginWithAuthKey")
+      reconnect()
+      return
+    }
+
     if (currentState == Ipn.State.NeedsLogin || currentState == Ipn.State.NoState) {
       val authKey = MDMSettings.authKey.flow.value.value
       if (authKey != null) {
@@ -153,6 +179,7 @@ class MainActivity : ComponentActivity() {
           result
               .onSuccess {
                 TSLog.d(TAG, "Auth key login success — requesting VPN permission")
+                markRegistered()
                 viewModel.showVPNPermissionLauncherIfUnauthorized()
                 viewModel.selectIndiaExitNode()
               }
@@ -167,16 +194,8 @@ class MainActivity : ComponentActivity() {
         viewModel.selectIndiaExitNode()
       }
     } else {
-      // Already authenticated — re-run start() to wake the LocalBackend state machine,
-      // then kick the VPN service. Without start(), setWantRunning(true) alone is ignored
-      // after a serviceDisconnect.
       TSLog.d(TAG, "Reconnecting (state=$currentState) — restarting LocalBackend without re-registering")
-      val reconnectPrefs = Ipn.MaskedPrefs()
-      reconnectPrefs.WantRunning = true
-      viewModel.login(reconnectPrefs) { _ ->
-        viewModel.showVPNPermissionLauncherIfUnauthorized()
-        viewModel.selectIndiaExitNode()
-      }
+      reconnect()
     }
   }
 
